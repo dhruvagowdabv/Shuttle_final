@@ -1,5 +1,4 @@
 {% load static %}
-
 <!doctype html>
 <html lang="en">
 
@@ -202,6 +201,31 @@
       border-radius: 4px;
       cursor: pointer;
     }
+
+    .dashboard {
+      display: flex;
+      justify-content: space-around;
+      background: #111;
+      color: #00ff88;
+      padding: 10px 0;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+    }
+
+    .dashboard div {
+      text-align: center;
+    }
+
+    .pulse-red {
+      animation: pulse 1s ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 rgba(255, 0, 0, 0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 0 10px rgba(255, 0, 0, 0.8); }
+      100% { transform: scale(1); box-shadow: 0 0 0 rgba(255, 0, 0, 0); }
+    }
   </style>
 </head>
 
@@ -222,9 +246,14 @@
 
   <section class="small-hero">
     <h1>Live Shuttle Tracking</h1>
-    <p style="color:#bfcfc1;">Shuttles move along actual road paths. Cards show shuttle info, progress, ETA, and next
-      stops.</p>
+    <p style="color:#bfcfc1;">Shuttles move along actual road paths. Cards show shuttle info, progress, ETA, and next stops.</p>
   </section>
+
+  <div class="dashboard">
+    <div> <b>Active:</b> <span id="dashboard-active">--</span></div>
+    <div><b>Congestion: </b><span id="dashboard-cong">--</span></div>
+    <div><b>Efficiency: </b><span id="dashboard-eff">--%</span></div>
+  </div>
 
   <div class="tracking-container">
     <div class="map-section">
@@ -244,7 +273,6 @@
     </aside>
   </div>
 
-  <!-- Existing JS for shuttle movement -->
   <script>
     const pilotAreas = {
       hebbal: { color: '#f9a825', center: [13.0368, 77.5978], stops: [[13.0368, 77.5978], [13.0405, 77.6018], [13.0380, 77.5935]] },
@@ -274,10 +302,7 @@
       const area = pilotAreas[key];
       const circle = L.circle(area.center, { radius: 5000, color: area.color, fillOpacity: 0.05 }).addTo(map);
       area.circle = circle;
-    }
 
-    for (let key in pilotAreas) {
-      const area = pilotAreas[key];
       area.stops.forEach((stop, idx) => {
         L.marker(stop).addTo(map).bindTooltip(stopNames[key][idx], { permanent: true, direction: 'top', className: 'stop-tooltip' });
       });
@@ -307,7 +332,8 @@
 
     function animateShuttle(shuttle, coords) {
       let index = 0, progress = 0;
-      const speedFactor = 0.022;
+      const speedFactor = 0.005;
+
       function move() {
         const curr = coords[index];
         const next = coords[(index + 1) % coords.length];
@@ -319,12 +345,15 @@
         shuttle.marker.setLatLng([lat, lng]);
 
         const img = shuttle.marker.getElement()?.querySelector('img');
-        if (img) img.style.transform = `rotate(${bearing(L.latLng(curr.lat, curr.lng), L.latLng(next.lat, next.lng))}deg)`;
+        if (img)
+          img.style.transform = `rotate(${bearing(L.latLng(curr.lat, curr.lng), L.latLng(next.lat, next.lng))}deg)`;
 
         shuttle.progress = Math.round(((index + progress) / coords.length) * 100);
-        shuttle.eta = Math.max(0, Math.round((coords.length - (index + progress)) / speedFactor));
-        shuttle._currentStop = index;
 
+        const baseETA = 10 + Math.random() * 5;
+        shuttle.eta = Math.max(5, Math.round(baseETA));
+
+        shuttle._currentStop = index;
         requestAnimationFrame(move);
       }
       move();
@@ -369,24 +398,53 @@
           const latlngs = area.stops.map(s => L.latLng(s[0], s[1]));
           const bounds = L.latLngBounds(latlngs);
           map.fitBounds(bounds.pad(0.5));
-          area.circle.setStyle({ color: '#00ff88', fillOpacity: 0.1 });
-          setTimeout(() => area.circle.setStyle({ color: area.color, fillOpacity: 0.05 }), 2000);
+          if (area.circle) {
+            area.circle.setStyle({ color: '#00ff88', fillOpacity: 0.1 });
+            setTimeout(() => area.circle.setStyle({ color: area.color, fillOpacity: 0.05 }), 2000);
+          }
         });
       });
     }
 
+    // ✅ FIXED CALL
     renderCards();
 
+    // Update ETA & progress
     setInterval(() => {
       shuttles.forEach(s => {
         const etaEl = document.getElementById(`eta-${s.id}`);
-        if (etaEl) etaEl.textContent = s.eta > 60 ? `${Math.round(s.eta / 60)} min` : `${s.eta} s`;
+        if (etaEl) etaEl.textContent = `${s.eta} min`;
+
         const progEl = document.getElementById(`progress-${s.id}`);
         if (progEl) progEl.style.width = `${s.progress}%`;
       });
     }, 500);
 
-    // 🔹 Zone Chart update
+    // Dashboard and congestion updates
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+    function updateEfficiency() {
+      let totalEff = 0, congested = 0;
+      shuttles.forEach(s => {
+        const occRatio = s.occupancy / s.capacity;
+        const eff = clamp(100 - occRatio * 30 - Math.random() * 5, 65, 100);
+        totalEff += eff;
+        const bar = document.getElementById(`progress-${s.id}`);
+        if (bar) {
+          if (eff > 85) bar.style.background = '#00ff88';
+          else if (eff > 75) bar.style.background = '#ffae00';
+          else { bar.style.background = '#ff4b4b'; bar.classList.add('pulse-red'); }
+        }
+        if (eff < 80) congested++;
+      });
+      document.getElementById('dashboard-active').textContent = shuttles.length;
+      document.getElementById('dashboard-cong').textContent = congested;
+      document.getElementById('dashboard-eff').textContent = Math.round(totalEff / shuttles.length) + '%';
+    }
+
+    setInterval(updateEfficiency, 2000);
+    updateEfficiency();
+
     function updateZoneChart() {
       const zoneCounts = {};
       shuttles.forEach(s => zoneCounts[s.area] = (zoneCounts[s.area] || 0) + 1);
@@ -398,45 +456,16 @@
           labels: Object.keys(zoneCounts).map(z => z.toUpperCase()),
           datasets: [{ data: Object.values(zoneCounts), backgroundColor: "rgba(0,255,136,0.6)" }]
         },
-        options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+        options: {
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+          plugins: { legend: { display: false } },
+          animation: { duration: 400 }
+        }
       });
     }
     setInterval(updateZoneChart, 4000);
     updateZoneChart();
   </script>
 
-  <!-- 🧠 AI Efficiency + Smart Alerts -->
-  <div id="ai-efficiency" style="position:fixed;bottom:18px;right:22px;background:#111;border:2px solid #00ff88;border-radius:10px;padding:10px 18px;color:#00ff88;font-weight:600;box-shadow:0 0 20px rgba(0,255,136,0.3);">
-    AI Efficiency: <span id="eff-val">--%</span>
-  </div>
-
-  <script>
-    function simulateEfficiency() {
-      const value = 80 + Math.random() * 15;
-      document.getElementById("eff-val").textContent = value.toFixed(1) + "%";
-      if (value < 85) {
-        showSmartAlert("⚠️ Route congestion detected. AI rerouting...");
-      }
-    }
-
-    function showSmartAlert(msg) {
-      const alertBox = document.createElement("div");
-      alertBox.textContent = msg;
-      alertBox.style.position = "fixed";
-      alertBox.style.top = "20px";
-      alertBox.style.right = "20px";
-      alertBox.style.background = "#ff6b6b";
-      alertBox.style.color = "#fff";
-      alertBox.style.padding = "10px 16px";
-      alertBox.style.borderRadius = "8px";
-      alertBox.style.boxShadow = "0 0 10px rgba(0,0,0,0.4)";
-      document.body.appendChild(alertBox);
-      setTimeout(() => alertBox.remove(), 3000);
-    }
-
-    setInterval(simulateEfficiency, 5000);
-  </script>
-
 </body>
-
 </html>
