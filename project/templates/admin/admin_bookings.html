@@ -7,13 +7,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body { margin:0; font-family:"Poppins",sans-serif; background:black; color:#1e293b; }
-    nav { background:#00ff88; color:white; display:flex; justify-content:space-between; align-items:center; padding:1rem 2rem; }
+    nav { background:#00ff88; color:black; display:flex; justify-content:space-between; align-items:center; padding:1rem 2rem; }
     .logo { font-size:1.5rem; font-weight:600; }
-    .logout { background:#ef4444; color:white; border:none; border-radius:8px; padding:0.5rem 1rem; cursor:pointer; }
+    .logout { background:#ef4444; color:black; border:none; border-radius:8px; padding:0.5rem 1rem; cursor:pointer; }
     .container { padding:2rem; max-width:1400px; margin:auto; }
     h2 { color:#00ff88; margin-bottom:1rem; }
     .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1.5rem; margin-top:1rem; }
-    .card { background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.1); text-align:center; transition:0.3s; }
+    .card { background:black; padding:1.5rem; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.1); text-align:center; transition:0.3s; }
     .card:hover { transform: translateY(-5px); box-shadow:0 8px 16px rgba(0,0,0,0.15); }
     table { width:100%; border-collapse:collapse; margin-top:2rem; background:white; border-radius:12px; overflow:hidden; box-shadow:0 4px 8px rgba(0,0,0,0.1); }
     th, td { padding:0.75rem 1rem; text-align:left; border-bottom:1px solid #e2e8f0; }
@@ -25,7 +25,7 @@
     .Pending { background:#facc15; color:#1e293b; }
     .Canceled { background:#ef4444; }
     .nav-links { display:flex; gap:1rem; align-items:center; }
-    .nav-links a { color:white; text-decoration:none; font-weight:500; }
+    .nav-links a { color:black; text-decoration:none; font-weight:500; }
     .nav-links a:hover { text-decoration:underline; }
     .filters { display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem; align-items:flex-end; }
     .filters select { padding:0.5rem; border-radius:6px; border:1px solid #cbd5e1; }
@@ -36,7 +36,7 @@
 </head>
 <body>
 <nav>
-  <div class="logo">ShuttlePro Admin</div>
+  <div class="logo">Shuttle Admin</div>
   <div class="nav-links">
     <a href="{% url 'admin_dashboard' %}">Dashboard</a>
     <a href="{% url 'admin_bookings' %}">Bookings</a>
@@ -49,7 +49,7 @@
 </nav>
 
 <div class="container">
-  <h2>Booking Management 👋</h2>
+  <h2>Booking Management </h2>
 
   <!-- Filters -->
   <form method="get" class="filters" id="filterForm">
@@ -84,7 +84,7 @@
 
   <!-- Summary Cards -->
   <div class="grid">
-    <div class="card">
+    <div class="card" style="background-color: rgb(239, 201, 131);">
       <h3>Total Bookings</h3>
       <p id="totalBookings">{{ total_bookings }}</p>
     </div>
@@ -100,7 +100,7 @@
       <h3>Cancelled</h3>
       <p id="canceledCount">{{ cancelled_count }}</p>
     </div>
-    <div class="card">
+    <div class="card" style="background-color: rgb(149, 204, 225);">
       <h3>Total Seats</h3>
       <p id="totalSeats">{{ total_seats }}</p>
     </div>
@@ -109,11 +109,11 @@
   <!-- Charts -->
   <div class="grid" style="margin-top:2rem; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap:1.5rem;">
     <div class="card">
-      <h3>Bookings per Zone</h3>
+      <h3 style="color: #00ff88;">Bookings per Zone</h3>
       <canvas id="zoneChart"></canvas>
     </div>
     <div class="card">
-      <h3>Payment Method Distribution</h3>
+      <h3 style="color: #00ff88;">Payment Method Distribution</h3>
       <canvas id="paymentChart"></canvas>
     </div>
   </div>

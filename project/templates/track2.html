@@ -21,17 +21,23 @@
       color: #eee;
     }
 
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 24px;
-      background: #111;
-    }
+   .navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 50px;
+  background: #111;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
 
     .navbar .logo {
       color: #00ff88;
       font-weight: bold;
-      font-size: 1.2rem;
+      font-size: 1.8rem;
+      cursor: pointer;
+      letter-spacing: 2px;
     }
 
     .navbar ul {
